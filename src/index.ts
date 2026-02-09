@@ -130,10 +130,39 @@ app.get(
       }
 
       if (!code) {
-        res.status(400).send("Missing authorization code");
+        res.status(200).send(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>OAuth Callback Endpoint</title>
+              <style>
+                body {
+                  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+                  max-width: 600px;
+                  margin: 80px auto;
+                  padding: 20px;
+                  text-align: center;
+                }
+                .info {
+                  color: #007bff;
+                  font-size: 48px;
+                  margin-bottom: 20px;
+                }
+                h1 { font-size: 24px; margin-bottom: 10px; color: #333; }
+                p { color: #666; line-height: 1.6; }
+              </style>
+            </head>
+            <body>
+              <div class="info">ℹ️</div>
+              <h1>OAuth 2.0 Callback Endpoint</h1>
+              <p>This endpoint is ready to receive OAuth authorization callbacks from Upwork.</p>
+            </body>
+          </html>
+        `);
         return;
       }
 
+      // Exchange code for access token
       const tokenResponse = await axios.post<UpworkTokenResponse>(
         "https://www.upwork.com/api/v3/oauth2/token",
         new URLSearchParams({
@@ -153,7 +182,6 @@ app.get(
 
       const { access_token, refresh_token, expires_in } = tokenResponse.data;
 
-      // Save tokens to database
       const expiresAt = Date.now() + expires_in * 1000;
       await saveTokens(access_token, refresh_token, expiresAt);
 
@@ -353,7 +381,7 @@ app.get("/", (req: Request, res: Response): void => {
         
         <div class="endpoint">
           <span class="method">GET</span>
-          <strong>/upwork/callback</strong> - OAuth callback (Upwork redirects here)
+          <strong>/upwork/callback</strong> - OAuth callback
         </div>
         
         <div class="endpoint">
